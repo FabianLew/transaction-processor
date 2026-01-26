@@ -33,6 +33,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:mongodb:1.21.4'
+    testImplementation 'org.testcontainers:junit-jupiter'
 }
 
 tasks.named('test') {
