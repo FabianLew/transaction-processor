@@ -62,7 +62,7 @@ Realm: transactions:
 - Client ID: transactions-processor
 - Client type: confidential
 - Authentication: OAuth2 / OpenID Connect
-- Custom claim: workspaceId (configured via protocol mapper)
+- Custom claim: workspace_id (configured via protocol mapper)
 
 Example token request
 
@@ -126,7 +126,7 @@ http://localhost:8080
 ### Import CSV for a given month
 
 ```
-POST /api/import/{yearMonth}
+POST /api/imports/{yearMonth}
 ```
 
 - `yearMonth` format: `YYYY-MM`
@@ -134,10 +134,32 @@ POST /api/import/{yearMonth}
 
 #### CSV format
 
+- `yearMonth` format: `YYYY-MM`
+- Body: `multipart/form-data` with a CSV file
+
+### CSV format
+
+```csv
+iban,date,currency,category,amount
+PL61109010140000071219812874,2026-01-10,PLN,FOOD,-10.50
+
 ```csv
 iban,date,currency,category,amount
 PL61109010140000071219812874,2026-01-10,PLN,FOOD,-10.50
 ```
+
+#### Validation rules
+
+Per row validation includes:
+
+- IBAN format
+- ISO-4217 currency code
+- valid date format
+- date must belong to imported month
+- category must be non-blank and max 100 chars
+- amount must be non-zero
+
+Invalid rows do **not** fail the entire import – they are reported and skipped.
 
 ## 🔄 Asynchronous Import Processing
 
@@ -160,25 +182,12 @@ The client does not block while the import is running and can poll the status en
 - Only one import per `(workspaceId, yearMonth)` can run at a time
 - Starting a new import while another is in progress results in:
 
-#### Validation rules
-
-Per row validation includes:
-
-- IBAN format
-- ISO-4217 currency code
-- valid date format
-- date must belong to imported month
-- category must be non-blank and max 100 chars
-- amount must be non-zero
-
-Invalid rows do **not** fail the entire import – they are reported and skipped.
-
 ---
 
 ## ⏱ Import Status
 
 ```
-GET /api/import/{yearMonth}/status
+GET /api/imports/{yearMonth}/status
 ```
 
 Possible states:
@@ -187,7 +196,7 @@ Possible states:
 - `COMPLETED`
 - `FAILED`
 - `NOT_FOUND`
-- `WITH_WARNINGS` (completed with some rejected rows)
+- `WITH_WARNING` (completed with some rejected rows)
 
 The response also contains:
 
@@ -203,7 +212,7 @@ This allows clients to check whether statistics are ready.
 Statistics are currently calculated **on demand** using MongoDB aggregation pipelines.
 
 ```
-GET /api/statistics/monthly
+GET /api/statistics
 ```
 
 ### Query object (`StatisticsQuery`)

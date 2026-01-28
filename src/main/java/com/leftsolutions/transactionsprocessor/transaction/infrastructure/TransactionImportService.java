@@ -67,6 +67,7 @@ class TransactionImportService implements TransactionImportFacade {
             var rejectedErrors = rows.stream()
                     .filter(r -> !r.isValid())
                     .map(CsvTransactionParser.ParseResultRow::error)
+                    .map(this::normalizeErrorMessage)
                     .limit(MAX_STORED_ERRORS)
                     .toList();
 
@@ -97,5 +98,17 @@ class TransactionImportService implements TransactionImportFacade {
                 log.warn("Could not delete temp import file {}: {}", csvFile, deleteError.getMessage(), deleteError);
             }
         }
+    }
+
+    private String normalizeErrorMessage(String error) {
+        if (error == null) {
+            return null;
+        }
+
+        return error
+                .replaceAll("^\\d+\\s+\\w+\\s+\"", "")
+                .replaceAll("\"$", "")
+                .replaceAll("[\\r\\n]", "")
+                .trim();
     }
 }
