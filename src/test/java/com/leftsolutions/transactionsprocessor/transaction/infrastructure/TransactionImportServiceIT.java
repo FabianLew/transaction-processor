@@ -9,8 +9,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.YearMonth;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +36,7 @@ class TransactionImportServiceIT extends IntegrationTestConfig {
     }
 
     @Test
-    void shouldImportTransactionsAndMarkImportAsCompleted() {
+    void shouldImportTransactionsAndMarkImportAsCompleted() throws Exception {
         // given
         var csv = """
                 iban,date,currency,category,amount
@@ -44,11 +45,13 @@ class TransactionImportServiceIT extends IntegrationTestConfig {
                 PL12109010140000071219812875,2026-01-12,PLN,RENT,-2000.00
                 """;
 
+        var csvFile = writeTempCsv(csv);
+
         // when
-        transactionImportFacade.importMonthly(WORKSPACE_ID, MONTH, inputStream(csv));
+        transactionImportFacade.importMonthlyAsync(WORKSPACE_ID, MONTH, csvFile);
+        var status = importingFacade.getStatus(WORKSPACE_ID, MONTH);
 
         // then
-        var status = importingFacade.getStatus(WORKSPACE_ID, MONTH);
         assertThat(status)
                 .returns(WORKSPACE_ID, ImportJobStatusDto::workspaceId)
                 .returns(MONTH, ImportJobStatusDto::month)
@@ -56,12 +59,12 @@ class TransactionImportServiceIT extends IntegrationTestConfig {
                 .returns(3, ImportJobStatusDto::importedRows)
                 .returns(0, ImportJobStatusDto::rejectedRows);
 
-        assertThat(transactionRepository.findAll())
-                .hasSize(3);
+        assertThat(status.errors()).isEmpty();
+        assertThat(transactionRepository.findAll()).hasSize(3);
     }
 
     @Test
-    void shouldCountRejectedRowsAndStillCompleteImport() {
+    void shouldCountRejectedRowsAndCompleteImportWithWarning() throws Exception {
         // given
         var csv = """
                 iban,date,currency,category,amount
@@ -71,21 +74,25 @@ class TransactionImportServiceIT extends IntegrationTestConfig {
                 PL12109010140000071219812875,2026-01-05,PLN,RENT,-100.00
                 """;
 
+        var csvFile = writeTempCsv(csv);
+
         // when
-        transactionImportFacade.importMonthly(WORKSPACE_ID, MONTH, inputStream(csv));
+        transactionImportFacade.importMonthlyAsync(WORKSPACE_ID, MONTH, csvFile);
+        var status = importingFacade.getStatus(WORKSPACE_ID, MONTH);
 
         // then
-        var status = importingFacade.getStatus(WORKSPACE_ID, MONTH);
         assertThat(status)
-                .returns(ImportJobState.COMPLETED, ImportJobStatusDto::state)
+                .returns(ImportJobState.WITH_WARNING, ImportJobStatusDto::state)
                 .returns(2, ImportJobStatusDto::importedRows)
                 .returns(2, ImportJobStatusDto::rejectedRows);
 
-        assertThat(transactionRepository.findAll())
-                .hasSize(2);
+        assertThat(status.errors()).isNotEmpty();
+        assertThat(transactionRepository.findAll()).hasSize(2);
     }
 
-    private ByteArrayInputStream inputStream(String csv) {
-        return new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+    private Path writeTempCsv(String csv) throws Exception {
+        var file = Files.createTempFile("it-import-", ".csv");
+        Files.writeString(file, csv, StandardCharsets.UTF_8);
+        return file;
     }
 }

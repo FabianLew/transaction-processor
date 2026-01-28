@@ -1,8 +1,10 @@
 package com.leftsolutions.transactionsprocessor.transaction.domain;
 
-import java.io.InputStream;
+import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobStatusDto;
+
+import java.nio.file.Path;
 import java.time.YearMonth;
 
 public interface TransactionImportFacade {
-    void importMonthly(String workspaceId, YearMonth month, InputStream csvInputStream);
+    ImportJobStatusDto importMonthlyAsync(String workspaceId, YearMonth month, Path csvFile);
 }

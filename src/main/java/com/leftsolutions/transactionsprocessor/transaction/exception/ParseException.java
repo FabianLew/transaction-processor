@@ -1,25 +1,24 @@
 package com.leftsolutions.transactionsprocessor.transaction.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.YearMonth;
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class ParseException extends RuntimeException {
+public class ParseException extends ResponseStatusException {
 
     private static final String MSG_MISSING_FIELD = "Line %d: missing or empty field: %s";
     private static final String MSG_MISSING_HEADER = "Missing or wrong header: %s";
-    private static final String MSG_INVALID_DATE_FORMAT = "Line %d Invalid yearMonth format: %s (expected YYYY-MM-DD)";
+    private static final String MSG_INVALID_DATE_FORMAT = "Line %d Invalid date format: %s (expected YYYY-MM-DD)";
     private static final String MSG_INVALID_AMOUNT_FORMAT = "Line %d Invalid amount format: %s (expected decimal number)";
-    private static final String MSG_DATE_NOT_IN_EXPECTED_MONTH = "Line %d: yearMonth not in expected month: %s";
+    private static final String MSG_DATE_NOT_IN_EXPECTED_MONTH = "Line %d: date not in expected month: %s";
     private static final String MSG_INVALID_IBAN_FORMAT = "Line %d: invalid IBAN format";
     private static final String MSG_INVALID_CURRENCY = "Line %d: invalid currency (expected ISO-4217, e.g. PLN)";
     private static final String MSG_INVALID_CATEGORY = "Line %d: invalid category (must be non-empty and <= 100 characters)";
     private static final String MSG_AMOUNT_MUST_BE_NON_ZERO = "Line %d: amount must be non-zero";
 
     private ParseException(String message) {
-        super(message);
+        super(HttpStatus.BAD_REQUEST, message);
     }
 
     public static ParseException missingField(long recordNumber, String fieldName) {

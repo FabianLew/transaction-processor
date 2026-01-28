@@ -139,6 +139,27 @@ iban,date,currency,category,amount
 PL61109010140000071219812874,2026-01-10,PLN,FOOD,-10.50
 ```
 
+## 🔄 Asynchronous Import Processing
+
+CSV imports are processed **asynchronously**.
+
+When a file is uploaded:
+
+1. The request is accepted immediately
+2. Import status is set to `PROCESSING`
+3. Parsing, validation and persistence are executed in the background
+4. Status is updated to one of:
+    - `COMPLETED`
+    - `WITH_WARNINGS`
+    - `FAILED`
+
+The client does not block while the import is running and can poll the status endpoint to check readiness.
+
+### Import guarantees
+
+- Only one import per `(workspaceId, yearMonth)` can run at a time
+- Starting a new import while another is in progress results in:
+
 #### Validation rules
 
 Per row validation includes:

@@ -11,8 +11,9 @@ import com.leftsolutions.transactionsprocessor.transaction.domain.TransactionImp
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.YearMonth;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,9 +33,9 @@ class StatisticsServiceIT extends IntegrationTestConfig {
     private StatisticsFacade statisticsFacade;
 
     @Test
-    void shouldReturnStatisticsGroupedByCategory() {
+    void shouldReturnStatisticsGroupedByCategory() throws Exception {
         // given
-        importSampleData();
+        importSampleDataAndWait();
 
         var query = new StatisticsQuery(MONTH, StatisticsGroupBy.CATEGORY);
 
@@ -63,9 +64,9 @@ class StatisticsServiceIT extends IntegrationTestConfig {
     }
 
     @Test
-    void shouldReturnStatisticsGroupedByIban() {
+    void shouldReturnStatisticsGroupedByIban() throws Exception {
         // given
-        importSampleData();
+        importSampleDataAndWait();
 
         var query = new StatisticsQuery(MONTH, StatisticsGroupBy.IBAN);
 
@@ -82,9 +83,9 @@ class StatisticsServiceIT extends IntegrationTestConfig {
     }
 
     @Test
-    void shouldReturnSummaryStatistics() {
+    void shouldReturnSummaryStatistics() throws Exception {
         // given
-        importSampleData();
+        importSampleDataAndWait();
 
         var query = new StatisticsQuery(MONTH, StatisticsGroupBy.SUMMARY);
 
@@ -92,15 +93,14 @@ class StatisticsServiceIT extends IntegrationTestConfig {
         var response = statisticsFacade.getMonthlyStatistics(WORKSPACE_ID, query);
 
         // then
-        assertThat(response.rows())
-                .hasSize(1);
+        assertThat(response.rows()).hasSize(1);
 
         assertThat(response.rows().getFirst())
                 .returns("SUMMARY", MonthlyStatisticsRowDto::key)
                 .returns(3L, MonthlyStatisticsRowDto::transactionsCount);
     }
 
-    private void importSampleData() {
+    private void importSampleDataAndWait() throws Exception {
         // given
         var csv = """
                 iban,date,currency,category,amount
@@ -109,14 +109,20 @@ class StatisticsServiceIT extends IntegrationTestConfig {
                 PL12109010140000071219812875,2026-01-12,PLN,RENT,-2000.00
                 """;
 
+        var csvFile = writeTempCsv(csv);
+
         // when
-        transactionImportFacade.importMonthly(WORKSPACE_ID, MONTH, inputStream(csv));
+        transactionImportFacade.importMonthlyAsync(WORKSPACE_ID, MONTH, csvFile);
 
         // then
         assertThat(importingFacade.isCompleted(WORKSPACE_ID, MONTH)).isTrue();
     }
 
-    private ByteArrayInputStream inputStream(String csv) {
-        return new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+
+    private Path writeTempCsv(String csv) throws Exception {
+        var file = Files.createTempFile("it-import-", ".csv");
+        Files.writeString(file, csv, StandardCharsets.UTF_8);
+        return file;
     }
 }
+

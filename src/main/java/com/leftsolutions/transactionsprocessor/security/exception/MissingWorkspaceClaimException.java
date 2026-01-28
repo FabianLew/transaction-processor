@@ -1,15 +1,14 @@
 package com.leftsolutions.transactionsprocessor.security.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 
-@ResponseStatus(HttpStatus.FORBIDDEN)
-public class MissingWorkspaceClaimException extends RuntimeException {
+public class MissingWorkspaceClaimException extends ResponseStatusException {
     private static final String MSG_JWT_MISSING = "JWT token is missing";
     private static final String MSG_WORKSPACE_CLAIM_MISSING = "Missing required workspace claim";
 
     private MissingWorkspaceClaimException(String message) {
-        super(message);
+        super(HttpStatus.FORBIDDEN, message);
     }
 
     public static MissingWorkspaceClaimException jwtMissing() {

@@ -5,20 +5,19 @@ import com.leftsolutions.transactionsprocessor.importing.domain.ImportingFacade;
 import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobState;
 import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobStatusDto;
 import com.leftsolutions.transactionsprocessor.transaction.domain.TransactionImportFacade;
-import com.leftsolutions.transactionsprocessor.transaction.exception.ImportException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
@@ -47,7 +46,7 @@ class TransactionImportRollbackIT extends IntegrationTestConfig {
     }
 
     @Test
-    void shouldRollbackTransactionsWhenSavingFailsInsideTransaction() {
+    void shouldRollbackTransactionsWhenSavingFailsInsideTransaction() throws Exception {
         // given
         seedExistingTransactionsForMonth();
 
@@ -61,19 +60,22 @@ class TransactionImportRollbackIT extends IntegrationTestConfig {
                 PL12109010140000071219812875,2026-01-11,PLN,RENT,-2000.00
                 """;
 
-        // when // then
-        assertThatThrownBy(() -> transactionImportFacade.importMonthly(WORKSPACE_ID, MONTH, inputStream(csv)))
-                .isInstanceOf(ImportException.class);
+        var csvFile = writeTempCsv(csv);
 
-        assertThat(transactionRepository.findAll())
-                .hasSize(2);
-
+        // when
+        transactionImportFacade.importMonthlyAsync(WORKSPACE_ID, MONTH, csvFile);
         var status = importingFacade.getStatus(WORKSPACE_ID, MONTH);
+
+        // then
         assertThat(status)
                 .returns(WORKSPACE_ID, ImportJobStatusDto::workspaceId)
                 .returns(MONTH, ImportJobStatusDto::month)
                 .returns(ImportJobState.FAILED, ImportJobStatusDto::state);
+
+        assertThat(status.errors()).isNotEmpty();
+        assertThat(transactionRepository.findAll()).hasSize(2);
     }
+
 
     private void seedExistingTransactionsForMonth() {
         transactionRepository.save(TransactionDocument.builder()
@@ -101,7 +103,10 @@ class TransactionImportRollbackIT extends IntegrationTestConfig {
                 .build());
     }
 
-    private ByteArrayInputStream inputStream(String csv) {
-        return new ByteArrayInputStream(csv.getBytes(StandardCharsets.UTF_8));
+    private Path writeTempCsv(String csv) throws Exception {
+        var file = Files.createTempFile("it-import-", ".csv");
+        Files.writeString(file, csv, StandardCharsets.UTF_8);
+        return file;
     }
+
 }

@@ -23,7 +23,7 @@ class ImportApiSecurityIT extends IntegrationTestConfig {
 
     private static final String WORKSPACE_ID = "workspace-1";
     private static final YearMonth MONTH = YearMonth.of(2026, 1);
-    private static final String STATUS_URL = "/api/imports/months/2026-01/status";
+    private static final String STATUS_URL = "/api/imports/2026-01/status";
     private static final String CLAIM_WORKSPACE_ID = "workspace_id";
     private static final ImportJobState IMPORT_JOB_STATE = ImportJobState.COMPLETED;
     private static final int IMPORTED_ROWS = 10;

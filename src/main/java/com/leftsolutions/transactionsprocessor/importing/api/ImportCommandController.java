@@ -1,16 +1,21 @@
 package com.leftsolutions.transactionsprocessor.importing.api;
 
+import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobStatusDto;
 import com.leftsolutions.transactionsprocessor.security.WorkspaceProvider;
 import com.leftsolutions.transactionsprocessor.transaction.domain.TransactionImportFacade;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.YearMonth;
 
 @RestController
@@ -19,13 +24,17 @@ import java.time.YearMonth;
 class ImportCommandController {
 
     private final TransactionImportFacade transactionImportFacade;
-
     private final WorkspaceProvider workspaceProvider;
 
     @PostMapping(value = "/{yearMonth}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    void importMonth(@PathVariable YearMonth yearMonth,
-                     @RequestPart("file") MultipartFile file) throws Exception {
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    ImportJobStatusDto importMonth(@PathVariable YearMonth yearMonth,
+                                   @RequestPart("file") MultipartFile file) throws IOException {
         var workspaceId = workspaceProvider.currentWorkspaceId();
-        transactionImportFacade.importMonthly(workspaceId, yearMonth, file.getInputStream());
+
+        var tempFile = Files.createTempFile("transactions-" + workspaceId + "-" + yearMonth + "-", ".csv");
+        file.transferTo(tempFile);
+
+        return transactionImportFacade.importMonthlyAsync(workspaceId, yearMonth, tempFile);
     }
 }
