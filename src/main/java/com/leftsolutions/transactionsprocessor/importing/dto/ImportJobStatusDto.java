@@ -2,6 +2,7 @@ package com.leftsolutions.transactionsprocessor.importing.dto;
 
 import java.time.Instant;
 import java.time.YearMonth;
+import java.util.List;
 
 public record ImportJobStatusDto(
         String workspaceId,
@@ -9,7 +10,7 @@ public record ImportJobStatusDto(
         ImportJobState state,
         int importedRows,
         int rejectedRows,
-        String error,
+        List<String> errors,
         Instant updatedAt
 ) {
 
@@ -20,7 +21,7 @@ public record ImportJobStatusDto(
                 ImportJobState.NOT_FOUND,
                 0,
                 0,
-                null,
+                List.of(),
                 Instant.now()
         );
     }

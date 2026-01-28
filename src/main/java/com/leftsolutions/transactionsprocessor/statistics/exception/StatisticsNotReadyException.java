@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.time.YearMonth;
 
-@ResponseStatus(HttpStatus.CONFLICT)
+@ResponseStatus(HttpStatus.PRECONDITION_FAILED)
 public class StatisticsNotReadyException extends RuntimeException {
     private static final String MSG_NOT_READY = "Statistics not ready. Import not completed for workspaceId=%s, month=%s";
 

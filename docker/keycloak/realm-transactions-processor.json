@@ -1,11 +1,15 @@
 {
-  "realm": "budget",
+  "realm": "transactions-processor",
   "enabled": true,
   "users": [
     {
       "username": "demo",
       "enabled": true,
+      "email": "demo@example.com",
       "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "User",
+      "requiredActions": [],
       "credentials": [
         {
           "type": "password",

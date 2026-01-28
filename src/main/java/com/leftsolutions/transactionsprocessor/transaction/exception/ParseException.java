@@ -3,13 +3,16 @@ package com.leftsolutions.transactionsprocessor.transaction.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import java.time.YearMonth;
+
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class ParseException extends RuntimeException {
 
     private static final String MSG_MISSING_FIELD = "Line %d: missing or empty field: %s";
-    private static final String MSG_INVALID_DATE_FORMAT = "Invalid date format: %s (expected YYYY-MM-DD)";
-    private static final String MSG_INVALID_AMOUNT_FORMAT = "Invalid amount format: %s (expected decimal number)";
-    private static final String MSG_DATE_NOT_IN_EXPECTED_MONTH = "Line %d: date not in expected month";
+    private static final String MSG_MISSING_HEADER = "Missing or wrong header: %s";
+    private static final String MSG_INVALID_DATE_FORMAT = "Line %d Invalid yearMonth format: %s (expected YYYY-MM-DD)";
+    private static final String MSG_INVALID_AMOUNT_FORMAT = "Line %d Invalid amount format: %s (expected decimal number)";
+    private static final String MSG_DATE_NOT_IN_EXPECTED_MONTH = "Line %d: yearMonth not in expected month: %s";
     private static final String MSG_INVALID_IBAN_FORMAT = "Line %d: invalid IBAN format";
     private static final String MSG_INVALID_CURRENCY = "Line %d: invalid currency (expected ISO-4217, e.g. PLN)";
     private static final String MSG_INVALID_CATEGORY = "Line %d: invalid category (must be non-empty and <= 100 characters)";
@@ -23,16 +26,16 @@ public class ParseException extends RuntimeException {
         return new ParseException(String.format(MSG_MISSING_FIELD, recordNumber, fieldName));
     }
 
-    public static ParseException invalidDateFormat(String dateString) {
-        return new ParseException(String.format(MSG_INVALID_DATE_FORMAT, dateString));
+    public static ParseException invalidDateFormat(int lineNumber, String dateString) {
+        return new ParseException(String.format(MSG_INVALID_DATE_FORMAT, lineNumber, dateString));
     }
 
-    public static ParseException invalidAmountFormat(String amountString) {
-        return new ParseException(String.format(MSG_INVALID_AMOUNT_FORMAT, amountString));
+    public static ParseException invalidAmountFormat(int lineNumber, String amountString) {
+        return new ParseException(String.format(MSG_INVALID_AMOUNT_FORMAT, lineNumber, amountString));
     }
 
-    public static ParseException dateNotInExpectedMonth(int lineNumber) {
-        return new ParseException(String.format(MSG_DATE_NOT_IN_EXPECTED_MONTH, lineNumber));
+    public static ParseException dateNotInExpectedMonth(int lineNumber, YearMonth expectedMonth) {
+        return new ParseException(String.format(MSG_DATE_NOT_IN_EXPECTED_MONTH, lineNumber, expectedMonth));
     }
 
     public static ParseException invalidIbanFormat(int lineNumber) {
@@ -49,5 +52,9 @@ public class ParseException extends RuntimeException {
 
     public static ParseException amountMustBeNonZero(int lineNumber) {
         return new ParseException(String.format(MSG_AMOUNT_MUST_BE_NON_ZERO, lineNumber));
+    }
+
+    public static ParseException missingHeader(String field) {
+        return new ParseException(String.format(MSG_MISSING_HEADER, field));
     }
 }

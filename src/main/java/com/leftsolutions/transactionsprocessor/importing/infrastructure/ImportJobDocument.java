@@ -11,6 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.time.YearMonth;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -38,7 +39,7 @@ class ImportJobDocument {
     private int importedRows;
     private int rejectedRows;
 
-    private String error;
+    private List<String> errors; // <--- change
     private Instant updatedAt;
 
     static ImportJobDocument newProcessing(String workspaceId, YearMonth month) {
@@ -50,25 +51,27 @@ class ImportJobDocument {
                 .state(ImportJobState.PROCESSING)
                 .importedRows(0)
                 .rejectedRows(0)
-                .error(null)
-                .updatedAt(Instant.now())
-                .build();
-    }
-    
-    ImportJobDocument markProcessing() {
-        return this.toBuilder()
-                .state(ImportJobState.PROCESSING)
-                .error(null)
+                .errors(List.of())
                 .updatedAt(Instant.now())
                 .build();
     }
 
-    ImportJobDocument markCompleted(int importedRows, int rejectedRows) {
+    ImportJobDocument markProcessing() {
         return this.toBuilder()
-                .state(ImportJobState.COMPLETED)
+                .state(ImportJobState.PROCESSING)
+                .errors(List.of())
+                .updatedAt(Instant.now())
+                .build();
+    }
+
+    ImportJobDocument markCompleted(int importedRows, int rejectedRows, List<String> errors) {
+        var finalState = rejectedRows > 0 ? ImportJobState.WITH_WARNING : ImportJobState.COMPLETED;
+
+        return this.toBuilder()
+                .state(finalState)
                 .importedRows(importedRows)
                 .rejectedRows(rejectedRows)
-                .error(null)
+                .errors(errors == null ? List.of() : errors)
                 .updatedAt(Instant.now())
                 .build();
     }
@@ -76,13 +79,12 @@ class ImportJobDocument {
     ImportJobDocument markFailed(String error) {
         return this.toBuilder()
                 .state(ImportJobState.FAILED)
-                .error(error)
+                .errors(error == null ? List.of() : List.of(error))
                 .updatedAt(Instant.now())
                 .build();
     }
 
     boolean isCompleted() {
-        return this.state == ImportJobState.COMPLETED;
+        return this.state == ImportJobState.COMPLETED || this.state == ImportJobState.WITH_WARNING;
     }
 }
-

@@ -8,6 +8,8 @@ spring:
       max-request-size: ${MAX_REQUEST_SIZE:10MB}
   mongodb:
     uri: ${MONGODB_URI:mongodb://localhost:27017/transactions-processor}
+    representation:
+      uuid: standard
   security:
     oauth2:
       resourceserver:

@@ -22,10 +22,10 @@ class ImportCommandController {
 
     private final WorkspaceProvider workspaceProvider;
 
-    @PostMapping(value = "/months/{month}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    void importMonth(@PathVariable YearMonth month,
+    @PostMapping(value = "/{yearMonth}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    void importMonth(@PathVariable YearMonth yearMonth,
                      @RequestPart("file") MultipartFile file) throws Exception {
         var workspaceId = workspaceProvider.currentWorkspaceId();
-        transactionImportFacade.importMonthly(workspaceId, month, file.getInputStream());
+        transactionImportFacade.importMonthly(workspaceId, yearMonth, file.getInputStream());
     }
 }

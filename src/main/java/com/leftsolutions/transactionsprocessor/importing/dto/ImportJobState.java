@@ -4,5 +4,6 @@ public enum ImportJobState {
     NOT_FOUND,
     PROCESSING,
     COMPLETED,
-    FAILED
+    FAILED,
+    WITH_WARNING
 }

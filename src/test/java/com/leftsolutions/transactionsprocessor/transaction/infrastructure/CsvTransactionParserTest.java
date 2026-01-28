@@ -21,7 +21,7 @@ class CsvTransactionParserTest {
     private static final String WORKSPACE_ID = "workspace-1";
     private static final YearMonth EXPECTED_MONTH = YearMonth.of(2026, 1);
 
-    private static final String HEADER = "iban,date,currency,category,amount";
+    private static final String HEADER = "iban,yearMonth,currency,category,amount";
     private static final String VALID_IBAN_1 = "PL61109010140000071219812874";
     private static final String VALID_IBAN_2 = "PL12109010140000071219812875";
 
@@ -124,13 +124,13 @@ class CsvTransactionParserTest {
     private static Stream<Arguments> invalidRowCases() {
         return Stream.of(
                 Arguments.of(row("", DATE_IN_MONTH_1, VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "iban"),
-                Arguments.of(row(VALID_IBAN_1, "", VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "date"),
+                Arguments.of(row(VALID_IBAN_1, "", VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "yearMonth"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, "", VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "currency"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, VALID_CURRENCY, "", AMOUNT_NEGATIVE), "category"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, VALID_CURRENCY, VALID_CATEGORY_FOOD, ""), "amount"),
 
                 Arguments.of(row("INVALID", DATE_IN_MONTH_1, VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "iban"),
-                Arguments.of(row(VALID_IBAN_1, "2026-01-XX", VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "date"),
+                Arguments.of(row(VALID_IBAN_1, "2026-01-XX", VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "yearMonth"),
                 Arguments.of(row(VALID_IBAN_1, DATE_OUT_OF_MONTH, VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "month"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, "PL", VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "currency"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, VALID_CURRENCY, tooLongCategory(), AMOUNT_NEGATIVE), "category"),

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.YearMonth;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,19 +36,21 @@ class ImportJobDocumentTest {
                 .returns(ImportJobState.PROCESSING, ImportJobDocument::getState)
                 .returns(0, ImportJobDocument::getImportedRows)
                 .returns(0, ImportJobDocument::getRejectedRows)
-                .returns(null, ImportJobDocument::getError);
+                .returns(List.of(), ImportJobDocument::getErrors);
 
         assertThat(doc.getId()).isNotNull();
         assertThat(doc.getUpdatedAt()).isNotNull();
     }
 
     @Test
-    void shouldMarkJobAsCompletedWithoutMutatingIdentityFields() {
+    void shouldMarkJobAsCompletedWhenRejectedRowsIsZero() {
         // given
         var base = baseProcessingJob();
+        var importedRows = 10;
+        var rejectedRows = 0;
 
         // when
-        var updated = base.markCompleted(IMPORTED_ROWS, REJECTED_ROWS);
+        var updated = base.markCompleted(importedRows, rejectedRows, List.of());
 
         // then
         assertThat(updated)
@@ -56,9 +59,33 @@ class ImportJobDocumentTest {
                 .returns(MONTH.getYear(), ImportJobDocument::getYear)
                 .returns(MONTH.getMonthValue(), ImportJobDocument::getMonth)
                 .returns(ImportJobState.COMPLETED, ImportJobDocument::getState)
+                .returns(importedRows, ImportJobDocument::getImportedRows)
+                .returns(rejectedRows, ImportJobDocument::getRejectedRows)
+                .returns(List.of(), ImportJobDocument::getErrors);
+
+        assertThat(updated.getUpdatedAt()).isNotNull();
+        assertThat(updated.getUpdatedAt()).isAfter(UPDATED_AT);
+    }
+
+    @Test
+    void shouldMarkJobAsWithWarningWhenRejectedRowsIsGreaterThanZero() {
+        // given
+        var base = baseProcessingJob();
+        var errors = List.of("Line 2: invalid iban", "Line 5: missing field amount");
+
+        // when
+        var updated = base.markCompleted(IMPORTED_ROWS, REJECTED_ROWS, errors);
+
+        // then
+        assertThat(updated)
+                .returns(JOB_ID, ImportJobDocument::getId)
+                .returns(WORKSPACE_ID, ImportJobDocument::getWorkspaceId)
+                .returns(MONTH.getYear(), ImportJobDocument::getYear)
+                .returns(MONTH.getMonthValue(), ImportJobDocument::getMonth)
+                .returns(ImportJobState.WITH_WARNING, ImportJobDocument::getState)
                 .returns(IMPORTED_ROWS, ImportJobDocument::getImportedRows)
                 .returns(REJECTED_ROWS, ImportJobDocument::getRejectedRows)
-                .returns(null, ImportJobDocument::getError);
+                .returns(errors, ImportJobDocument::getErrors);
 
         assertThat(updated.getUpdatedAt()).isNotNull();
         assertThat(updated.getUpdatedAt()).isAfter(UPDATED_AT);
@@ -81,10 +108,21 @@ class ImportJobDocumentTest {
                 .returns(ImportJobState.FAILED, ImportJobDocument::getState)
                 .returns(IMPORTED_ROWS, ImportJobDocument::getImportedRows)
                 .returns(REJECTED_ROWS, ImportJobDocument::getRejectedRows)
-                .returns(ERROR_MESSAGE, ImportJobDocument::getError);
+                .returns(List.of(ERROR_MESSAGE), ImportJobDocument::getErrors);
 
         assertThat(updated.getUpdatedAt()).isNotNull();
         assertThat(updated.getUpdatedAt()).isAfter(UPDATED_AT);
+    }
+
+    @Test
+    void shouldTreatCompletedAndWithWarningAsCompleted() {
+        // given
+        var completed = baseProcessingJob().markCompleted(IMPORTED_ROWS, 0, List.of());
+        var withWarning = baseProcessingJob().markCompleted(IMPORTED_ROWS, 1, List.of("Line 2: invalid record"));
+
+        // then
+        assertThat(completed.isCompleted()).isTrue();
+        assertThat(withWarning.isCompleted()).isTrue();
     }
 
     private static ImportJobDocument baseProcessingJob() {
@@ -96,7 +134,7 @@ class ImportJobDocumentTest {
                 .state(ImportJobState.PROCESSING)
                 .importedRows(0)
                 .rejectedRows(0)
-                .error(null)
+                .errors(List.of())
                 .updatedAt(UPDATED_AT)
                 .build();
     }
@@ -110,7 +148,7 @@ class ImportJobDocumentTest {
                 .state(ImportJobState.PROCESSING)
                 .importedRows(IMPORTED_ROWS)
                 .rejectedRows(REJECTED_ROWS)
-                .error(null)
+                .errors(List.of())
                 .updatedAt(UPDATED_AT)
                 .build();
     }

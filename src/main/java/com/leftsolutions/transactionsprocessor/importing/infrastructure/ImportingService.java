@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.YearMonth;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +26,11 @@ class ImportingService implements ImportingFacade {
     }
 
     @Override
-    public void markCompleted(String workspaceId, YearMonth month, int importedRows, int rejectedRows) {
+    public void markCompleted(String workspaceId, YearMonth month, int importedRows, int rejectedRows, List<String> errors) {
         var job = importJobRepository
                 .findByWorkspaceIdAndYearAndMonth(workspaceId, month.getYear(), month.getMonthValue())
                 .orElseGet(() -> ImportJobDocument.newProcessing(workspaceId, month))
-                .markCompleted(importedRows, rejectedRows);
+                .markCompleted(importedRows, rejectedRows, errors);
 
         importJobRepository.save(job);
     }

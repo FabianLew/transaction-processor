@@ -19,9 +19,9 @@ class ImportQueryController {
     private final ImportingFacade importingFacade;
     private final WorkspaceProvider workspaceProvider;
 
-    @GetMapping("/months/{month}/status")
-    ImportJobStatusDto status(@PathVariable YearMonth month) {
+    @GetMapping("/{yearMonth}/status")
+    ImportJobStatusDto status(@PathVariable YearMonth yearMonth) {
         var workspaceId = workspaceProvider.currentWorkspaceId();
-        return importingFacade.getStatus(workspaceId, month);
+        return importingFacade.getStatus(workspaceId, yearMonth);
     }
 }

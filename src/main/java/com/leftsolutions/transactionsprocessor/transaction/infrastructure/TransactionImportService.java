@@ -10,11 +10,13 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.InputStream;
 import java.time.YearMonth;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 class TransactionImportService implements TransactionImportFacade {
+    private static final int MAX_STORED_ERRORS = 100;
 
     private final ImportingFacade importingFacade;
     private final CsvTransactionParser csvTransactionParser;
@@ -29,11 +31,17 @@ class TransactionImportService implements TransactionImportFacade {
         var rows = parseRows(workspaceId, month, csvInputStream);
 
         var validDocs = rows.stream()
-                .filter(row -> row.error() == null)
+                .filter(CsvTransactionParser.ParseResultRow::isValid)
                 .map(CsvTransactionParser.ParseResultRow::document)
                 .toList();
 
-        var rejected = (int) rows.stream().filter(row -> row.error() != null).count();
+        var rejectedErrors = rows.stream()
+                .filter(row -> !row.isValid())
+                .map(CsvTransactionParser.ParseResultRow::error)
+                .limit(MAX_STORED_ERRORS)
+                .toList();
+
+        var rejected = rows.size() - validDocs.size();
 
         try {
             transactionTemplate.executeWithoutResult(status -> {
@@ -45,10 +53,11 @@ class TransactionImportService implements TransactionImportFacade {
 
                 transactionRepository.saveAll(validDocs);
 
-                importingFacade.markCompleted(workspaceId, month, validDocs.size(), rejected);
+                importingFacade.markCompleted(workspaceId, month, validDocs.size(), rejected, rejectedErrors);
             });
 
-            log.debug("Imported transactions for workspaceId={}, month={}", workspaceId, month);
+            log.debug("Imported transactions for workspaceId={}, month={}, importedRows={}, rejectedRows={}",
+                    workspaceId, month, validDocs.size(), rejected);
         } catch (Exception e) {
             importingFacade.markFailed(workspaceId, month, e.getMessage());
             log.debug("Import failed for workspaceId={}, month={}: {}", workspaceId, month, e.getMessage());
@@ -56,7 +65,7 @@ class TransactionImportService implements TransactionImportFacade {
         }
     }
 
-    private java.util.List<CsvTransactionParser.ParseResultRow> parseRows(String workspaceId, YearMonth month, InputStream csvInputStream) {
+    private List<CsvTransactionParser.ParseResultRow> parseRows(String workspaceId, YearMonth month, InputStream csvInputStream) {
         try {
             return csvTransactionParser.parse(workspaceId, csvInputStream, month);
         } catch (Exception e) {

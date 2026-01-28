@@ -43,14 +43,16 @@ class StatisticsService implements StatisticsFacade {
 
     @Override
     public MonthlyStatisticsResponseDto getMonthlyStatistics(String workspaceId, StatisticsQuery query) {
-        var month = query.date();
+        var month = query.yearMonth();
         ensureReady(workspaceId, month);
 
         var rows = switch (query.groupBy()) {
             case CATEGORY -> aggregateGrouped(workspaceId, month, FIELD_CATEGORY);
             case IBAN -> aggregateGrouped(workspaceId, month, FIELD_IBAN);
             case SUMMARY -> aggregateSummary(workspaceId, month);
+            case null -> aggregateSummary(workspaceId, month);
         };
+
 
         return new MonthlyStatisticsResponseDto(
                 workspaceId,

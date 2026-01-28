@@ -67,13 +67,12 @@ Realm: transactions:
 Example token request
 
 ```curl
-curl -X POST "http://localhost:8081/realms/transactions/protocol/openid-connect/token" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "client_id=transactions-processor" \
-  -d "client_secret=transactions-processor-secret" \
-  -d "grant_type=password" \
-  -d "username=test-user" \
-  -d "password=test-password"
+curl -X POST 'http://localhost:8081/realms/transactions-processor/protocol/openid-connect/token' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'client_id=transactions-processor' \
+--data-urlencode 'username=demo' \
+--data-urlencode 'password=demo'
 ```
 
 Example JWT payload:
@@ -166,6 +165,8 @@ Possible states:
 - `PROCESSING`
 - `COMPLETED`
 - `FAILED`
+- `NOT_FOUND`
+- `WITH_WARNINGS` (completed with some rejected rows)
 
 The response also contains:
 
@@ -184,18 +185,20 @@ Statistics are currently calculated **on demand** using MongoDB aggregation pipe
 GET /api/statistics/monthly
 ```
 
-### Query parameters
+### Query object (`StatisticsQuery`)
 
-- `date` – `YYYY-MM`
-- `groupedBy` – enum value:
+The following fields are mapped from query parameters:
+
+- `yearMonth` – required, format: `YYYY-MM`
+- `groupBy` – optional enum value:
     - `CATEGORY`
     - `IBAN`
-    - `SUMMARY`
+    - `SUMMARY` (default)
 
 Example:
 
 ```
-GET /api/statistics/monthly?date=2026-01&groupedBy=CATEGORY
+GET /api/statistics/monthly?yearMonth=2026-01&groupedBy=CATEGORY
 ```
 
 ### Response

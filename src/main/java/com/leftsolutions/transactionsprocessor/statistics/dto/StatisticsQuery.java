@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.YearMonth;
 
 public record StatisticsQuery(
-        @NotNull YearMonth date,
-        @NotNull StatisticsGroupBy groupBy
+        @NotNull YearMonth yearMonth,
+        StatisticsGroupBy groupBy
 ) {
 }
