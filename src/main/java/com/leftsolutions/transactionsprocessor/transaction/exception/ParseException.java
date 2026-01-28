@@ -1,5 +1,9 @@
 package com.leftsolutions.transactionsprocessor.transaction.exception;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
 public class ParseException extends RuntimeException {
 
     private static final String MSG_MISSING_FIELD = "Line %d: missing or empty field: %s";

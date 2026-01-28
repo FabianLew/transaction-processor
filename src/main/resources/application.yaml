@@ -7,4 +7,9 @@ spring:
       max-file-size: ${MAX_FILE_SIZE:10MB}
       max-request-size: ${MAX_REQUEST_SIZE:10MB}
   mongodb:
-    uri: ${MONGODB_URI:mongodb://localhost:27017/budget}
+    uri: ${MONGODB_URI:mongodb://localhost:27017/transactions-processor}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SECURITY_JWT_ISSUER_URI:http://localhost:8081/realms/transactions-processor}

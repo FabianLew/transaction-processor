@@ -1,0 +1,64 @@
+{
+  "realm": "budget",
+  "enabled": true,
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "attributes": {
+        "workspace_id": [
+          "workspace-1"
+        ]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "transactions-processor",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "workspace-scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "workspace_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "workspace_id",
+            "claim.name": "workspace_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "profile",
+    "email",
+    "roles",
+    "web-origins",
+    "workspace-scope"
+  ]
+}

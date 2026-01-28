@@ -11,4 +11,17 @@ public record ImportJobStatusDto(
         int rejectedRows,
         String error,
         Instant updatedAt
-) { }
+) {
+
+    public static ImportJobStatusDto notFound(String workspaceId, YearMonth month) {
+        return new ImportJobStatusDto(
+                workspaceId,
+                month,
+                ImportJobState.NOT_FOUND,
+                0,
+                0,
+                null,
+                Instant.now()
+        );
+    }
+}

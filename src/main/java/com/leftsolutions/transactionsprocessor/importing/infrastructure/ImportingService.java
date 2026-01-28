@@ -1,12 +1,10 @@
 package com.leftsolutions.transactionsprocessor.importing.infrastructure;
 
 import com.leftsolutions.transactionsprocessor.importing.domain.ImportingFacade;
-import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobState;
 import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobStatusDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.time.YearMonth;
 
 @Service
@@ -51,15 +49,7 @@ class ImportingService implements ImportingFacade {
         return importJobRepository
                 .findByWorkspaceIdAndYearAndMonth(workspaceId, month.getYear(), month.getMonthValue())
                 .map(importJobMapper::toDto)
-                .orElseGet(() -> new ImportJobStatusDto(
-                        workspaceId,
-                        month,
-                        ImportJobState.NOT_FOUND,
-                        0,
-                        0,
-                        null,
-                        Instant.EPOCH
-                ));
+                .orElseGet(() -> ImportJobStatusDto.notFound(workspaceId, month));
     }
 
     @Override

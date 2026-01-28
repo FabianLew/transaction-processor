@@ -1,5 +1,6 @@
 package com.leftsolutions.transactionsprocessor.importing.api;
 
+import com.leftsolutions.transactionsprocessor.security.WorkspaceProvider;
 import com.leftsolutions.transactionsprocessor.transaction.domain.TransactionImportFacade;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,12 @@ class ImportCommandController {
 
     private final TransactionImportFacade transactionImportFacade;
 
-    @PostMapping(value = "/workspaces/{workspaceId}/months/{month}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    void importMonth(
-            @PathVariable String workspaceId,
-            @PathVariable @Pattern(regexp = "\\d{4}-\\d{2}") String month,
-            @RequestPart("file") MultipartFile file) throws Exception {
+    private final WorkspaceProvider workspaceProvider;
+
+    @PostMapping(value = "/months/{month}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    void importMonth(@PathVariable @Pattern(regexp = "\\d{4}-\\d{2}") String month,
+                     @RequestPart("file") MultipartFile file) throws Exception {
+        var workspaceId = workspaceProvider.currentWorkspaceId();
         transactionImportFacade.importMonthly(workspaceId, YearMonth.parse(month), file.getInputStream());
     }
 }
