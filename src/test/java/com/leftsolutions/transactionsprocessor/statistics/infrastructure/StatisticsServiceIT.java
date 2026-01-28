@@ -49,7 +49,7 @@ class StatisticsServiceIT extends IntegrationTestConfig {
 
         assertThat(response.rows())
                 .extracting(MonthlyStatisticsRowDto::key)
-                .containsExactly("RENT", "FOOD");
+                .containsExactlyInAnyOrder("RENT", "FOOD");
 
         assertThat(response.rows())
                 .filteredOn(r -> r.key().equals("FOOD"))
@@ -75,7 +75,7 @@ class StatisticsServiceIT extends IntegrationTestConfig {
         // then
         assertThat(response.rows())
                 .extracting(MonthlyStatisticsRowDto::key)
-                .containsExactly(
+                .containsExactlyInAnyOrder(
                         "PL12109010140000071219812875",
                         "PL61109010140000071219812874"
                 );

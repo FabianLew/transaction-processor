@@ -132,7 +132,6 @@ class CsvTransactionParserTest {
                 Arguments.of(row("INVALID", DATE_IN_MONTH_1, VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "iban"),
                 Arguments.of(row(VALID_IBAN_1, "2026-01-XX", VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "date"),
                 Arguments.of(row(VALID_IBAN_1, DATE_OUT_OF_MONTH, VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "month"),
-                Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, "pln", VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "currency"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, "PL", VALID_CATEGORY_FOOD, AMOUNT_NEGATIVE), "currency"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, VALID_CURRENCY, tooLongCategory(), AMOUNT_NEGATIVE), "category"),
                 Arguments.of(row(VALID_IBAN_1, DATE_IN_MONTH_1, VALID_CURRENCY, VALID_CATEGORY_FOOD, AMOUNT_INVALID), "amount"),

@@ -6,7 +6,7 @@ import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobState;
 import com.leftsolutions.transactionsprocessor.importing.dto.ImportJobStatusDto;
 import com.leftsolutions.transactionsprocessor.transaction.domain.TransactionImportFacade;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,7 +19,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@AutoConfigureMockMvc
 class ImportApiSecurityIT extends IntegrationTestConfig {
 
     private static final String WORKSPACE_ID = "workspace-1";
@@ -36,11 +35,8 @@ class ImportApiSecurityIT extends IntegrationTestConfig {
     @MockitoBean
     private ImportingFacade importingFacade;
 
-    private final MockMvc mockMvc;
-
-    ImportApiSecurityIT(MockMvc mockMvc) {
-        this.mockMvc = mockMvc;
-    }
+    @Autowired
+    private MockMvc mockMvc;
 
 
     @Test
